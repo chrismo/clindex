@@ -35,6 +35,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 require 'thread'
 require 'drb'
+require 'rubygems'
+gem 'clutil'
 require 'cl/util/console'
 
 # create a batch_add method? This would allow a whole

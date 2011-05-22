@@ -1,0 +1,7 @@
+task :build do
+  system "gem build clindex.gemspec"
+end
+
+task :release => :build do
+  system "gem push clindex-1.2.0.gem"
+end
