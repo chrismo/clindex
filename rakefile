@@ -3,5 +3,5 @@ task :build do
 end
 
 task :release => :build do
-  system "gem push clindex-1.2.0.gem"
+  system "gem push clindex-1.2.1.gem"
 end
