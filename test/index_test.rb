@@ -1,4 +1,5 @@
-require 'test/unit'
+require 'minitest/autorun'
+
 require_relative '../src/index'
 
 # descendant class that intentionally slows down the locking process
@@ -11,12 +12,12 @@ class ClIndexLockDelay < ClIndex
   end
 end
 
-class TestClIndex < Test::Unit::TestCase
+class TestClIndex < Minitest::Test
   def setup
     @indexfn = 'test.index.dat'
   end
 
-  def tear_down
+  def teardown
     File.delete(@indexfn) if File.exists?(@indexfn)
   end
 
@@ -80,9 +81,21 @@ class TestClIndex < Test::Unit::TestCase
     assert(!@index.term_exists?(term.reverse))
     assert(!@index.term_exists?(term + 'a'))
   end
+
+  # ClIndex doesn't support splitting on space character
+  # to search for multiple terms.
+  def test_multi_term_search
+    @index = ClIndex.new
+    @index.add('beef', 'PageSix')
+    @index.add('wellington', 'PageSix')
+    @index.add('beef', 'PageFive')
+    hits = []
+    assert @index.search('ee ll', hits)
+    assert_equal([], hits)
+  end
 end
 
-class TestClIndexLockMgr < Test::Unit::TestCase
+class TestClIndexLockMgr < Minitest::Test
   def setup
     @l = ClIndexLockMgr.new
   end
@@ -131,7 +144,7 @@ class TestClIndexLockMgr < Test::Unit::TestCase
   end
 end
 
-class TestClIndexLockMgrWaiting < Test::Unit::TestCase
+class TestClIndexLockMgrWaiting < Minitest::Test
   def setup
     @l = ClIndexLockMgr.new
   end
@@ -167,7 +180,7 @@ class TestClIndexLockMgrWaiting < Test::Unit::TestCase
   end
 end
 
-class TestClIndexMultiUser < Test::Unit::TestCase
+class TestClIndexMultiUser < Minitest::Test
   def setup
     @index = ClIndexLockDelay.new
     @index.add('pickle', 'Page 6')
@@ -248,7 +261,7 @@ class TestClIndexMultiUser < Test::Unit::TestCase
   end
 end
 
-class TestThreadSafeArray < Test::Unit::TestCase
+class TestThreadSafeArray < Minitest::Test
   def test_ts_array_simple
     @a = ThreadSafeArray.new
     @a << 1
