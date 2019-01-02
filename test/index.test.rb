@@ -1,40 +1,5 @@
-# $Id: index.test.rb,v 1.14 2003/05/28 22:57:28 chrismo Exp $
-=begin
-----------------------------------------------------------------------------
-Copyright (c) 2002, Chris Morris
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice,
-this list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright notice,
-this list of conditions and the following disclaimer in the documentation
-and/or other materials provided with the distribution.
-
-3. Neither the names Chris Morris, cLabs nor the names of contributors to
-this software may be used to endorse or promote products derived from this
-software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS
-IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR
-CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
-OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
-ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-----------------------------------------------------------------------------
-(based on BSD Open Source License)
-=end
-
 require 'test/unit'
-require 'index'
+require_relative '../src/index'
 
 # descendant class that intentionally slows down the locking process
 # to control testing
@@ -47,7 +12,7 @@ class ClIndexLockDelay < ClIndex
 end
 
 class TestClIndex < Test::Unit::TestCase
-  def set_up
+  def setup
     @indexfn = 'test.index.dat'
   end
 
@@ -118,7 +83,7 @@ class TestClIndex < Test::Unit::TestCase
 end
 
 class TestClIndexLockMgr < Test::Unit::TestCase
-  def set_up
+  def setup
     @l = ClIndexLockMgr.new
   end
 
@@ -167,7 +132,7 @@ class TestClIndexLockMgr < Test::Unit::TestCase
 end
 
 class TestClIndexLockMgrWaiting < Test::Unit::TestCase
-  def set_up
+  def setup
     @l = ClIndexLockMgr.new
   end
 
@@ -203,7 +168,7 @@ class TestClIndexLockMgrWaiting < Test::Unit::TestCase
 end
 
 class TestClIndexMultiUser < Test::Unit::TestCase
-  def set_up
+  def setup
     @index = ClIndexLockDelay.new
     @index.add('pickle', 'Page 6')
     @index.add('cheese', 'Page 7')

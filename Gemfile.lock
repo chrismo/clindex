@@ -1,0 +1,25 @@
+PATH
+  remote: .
+  specs:
+    clindex (2.0.0)
+      clutil (>= 2011.138.0)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    clutil (2017.063.0)
+      rake
+    power_assert (1.1.3)
+    rake (12.3.2)
+    test-unit (3.2.9)
+      power_assert
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  clindex!
+  test-unit
+
+BUNDLED WITH
+   1.17.3
