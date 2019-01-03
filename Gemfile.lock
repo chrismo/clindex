@@ -1,0 +1,23 @@
+PATH
+  remote: .
+  specs:
+    clindex (2.0.0)
+      clutil (>= 2011.138.0)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    clutil (2017.063.0)
+      rake
+    minitest (5.11.3)
+    rake (12.3.2)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  clindex!
+  minitest
+
+BUNDLED WITH
+   1.17.3
