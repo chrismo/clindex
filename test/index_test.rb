@@ -18,7 +18,7 @@ class TestClIndex < Minitest::Test
   end
 
   def teardown
-    File.delete(@indexfn) if File.exists?(@indexfn)
+    File.delete(@indexfn) if File.exist?(@indexfn)
   end
 
   def test_index_locking
@@ -49,7 +49,7 @@ class TestClIndex < Minitest::Test
     }
 
     threads.each { |t| t.join; assert(t["actual"], t["name"]) }
-    assert(File.exists?(@indexfn))
+    assert(File.exist?(@indexfn))
   end
 
   def test_add_remove
