@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'drb'
 require 'rubygems'
 gem 'clutil'
@@ -12,10 +14,10 @@ class ClIndex
   WAIT = true
   NO_WAIT = false
 
-  def initialize(verboseServer=false)
+  def initialize(verbose_server = false)
     @index = {}
-    @lockMgr = ClIndexLockMgr.new
-    @verboseServer = verboseServer
+    @lock_mgr = ClIndexLockMgr.new
+    @verbose_server = verbose_server
   end
 
   def assign(src)
@@ -25,16 +27,16 @@ class ClIndex
   # refactor with do_read?
   def do_edit(wait)
     locked = lock(ClIndexLockMgr::EDIT, wait)
-    if locked
-      begin
-        yield if block_given?
-      ensure
-        unlock(ClIndexLockMgr::EDIT)
-      end
+    return unless locked
+
+    begin
+      yield if block_given?
+    ensure
+      unlock(ClIndexLockMgr::EDIT)
     end
   end
 
-  def add(term, reference, wait=NO_WAIT)
+  def add(term, reference, wait = NO_WAIT)
     success = false
     do_edit(wait) {
       @index[term] = [] if @index[term].nil?
@@ -45,11 +47,11 @@ class ClIndex
     success
   end
 
-  def remove(reference, wait=NO_WAIT)
+  def remove(reference, wait = NO_WAIT)
     success = false
     do_edit(wait) {
-      @index.each_pair do |term, refArray|
-        @index[term].delete(reference) if refArray.include?(reference)
+      @index.each_pair do |term, ref_array|
+        @index[term].delete(reference) if ref_array.include?(reference)
         @index.delete(term) if @index[term].empty?
       end
       success = true
@@ -61,11 +63,11 @@ class ClIndex
   # wait (defaults to false). If wait is false and a blocking action
   # is preventing saving, the call returns immediately. If wait is true,
   # save waits for the blocking action to complete before continuing.
-  def save(filename='index.dat', wait=NO_WAIT)
+  def save(filename = 'index.dat', wait = NO_WAIT)
     locked = lock(ClIndexLockMgr::SAVE, wait)
     if locked
       begin
-        File.open(filename, File::CREAT|File::TRUNC|File::RDWR) do |f|
+        File.open(filename, File::CREAT | File::TRUNC | File::RDWR) do |f|
           Marshal.dump(@index, f)
         end
       ensure
@@ -75,7 +77,7 @@ class ClIndex
     locked
   end
 
-  def load(filename='index.dat', wait=NO_WAIT)
+  def load(filename = 'index.dat', wait = NO_WAIT)
     locked = lock(ClIndexLockMgr::LOAD, wait)
     if locked
       begin
@@ -89,14 +91,14 @@ class ClIndex
     locked
   end
 
-  def search(term, hits, wait=NO_WAIT)
-    puts 'searching...' if @verboseServer
+  def search(term, hits, wait = NO_WAIT)
+    puts 'searching...' if @verbose_server
     success = false
     do_read(wait) {
       success = true
       terms = @index.keys.grep(/#{term}/i)
-      terms.each do |thisTerm|
-        hits << @index[thisTerm]
+      terms.each do |this_term|
+        hits << @index[this_term]
       end
       hits = hits.flatten.uniq.sort
     }
@@ -105,30 +107,30 @@ class ClIndex
 
   def do_read(wait)
     locked = lock(ClIndexLockMgr::READ, wait)
-    if locked
-      begin
-        yield if block_given?
-      ensure
-        unlock(ClIndexLockMgr::READ)
-      end
+    return unless locked
+
+    begin
+      yield if block_given?
+    ensure
+      unlock(ClIndexLockMgr::READ)
     end
   end
 
-  def all_terms(reference, wait=NO_WAIT)
+  def all_terms(reference, wait = NO_WAIT)
     all = []
     do_read(wait) {
-      @index.each do |term, refArray|
-        all << term if refArray.include?(reference)
+      @index.each do |term, ref_array|
+        all << term if ref_array.include?(reference)
       end
     }
     all
   end
 
-  def reference_exists?(reference, wait=NO_WAIT)
+  def reference_exists?(reference, wait = NO_WAIT)
     exists = false
     do_read(wait) {
-      @index.each do |term, refArray|
-        if refArray.include? reference
+      @index.each do |_, ref_array|
+        if ref_array.include? reference
           exists = true
           break
         end
@@ -137,36 +139,36 @@ class ClIndex
     exists
   end
 
-  def term_exists?(term, wait=NO_WAIT)
+  def term_exists?(term, wait = NO_WAIT)
     exists = false
     do_read(wait) {
-      exists = @index.keys.include?(term)
+      exists = @index.key?(term)
     }
     exists
   end
 
-  def lock(lockType, wait=NO_WAIT)
-    @lockMgr.lock(lockType, wait)
+  def lock(lock_type, wait = NO_WAIT)
+    @lock_mgr.lock(lock_type, wait)
   end
 
-  def unlock(lockType)
-    @lockMgr.unlock(lockType)
+  def unlock(lock_type)
+    @lock_mgr.unlock(lock_type)
   end
 end
 
 class ThreadSafeArray
   def initialize
     @mutex = Mutex.new
-    @internalArray = []
+    @internal_array = []
   end
 
   def to_ary
-    @internalArray
+    @internal_array
   end
 
   def method_missing(method, *args, &block)
     @mutex.synchronize do
-      @internalArray.send(method, *args, &block)
+      @internal_array.send(method, *args, &block)
     end
   end
 end
@@ -190,42 +192,44 @@ class ClIndexLockMgr
     @mutex = Mutex.new
   end
 
-  def lock_approved(lockType)
+  def lock_approved(lock_type)
     result = true
     @allowable.each_pair do |locked, allowable|
-      if @current.include?(locked) && !allowable.include?(lockType)
+      if @current.include?(locked) && !allowable.include?(lock_type)
         result = false
       end
-      break if !result
+      break unless result
     end
     result
   end
 
-  def lock(lockType, wait=false)
+  def lock(lock_type, wait = false)
+    approved = nil
     if wait
-      begin
-        approved = lock_approved(lockType)
-      end until approved
+      loop do
+        approved = lock_approved(lock_type)
+        break if approved
+      end
     else
-      approved = lock_approved(lockType)
+      approved = lock_approved(lock_type)
     end
-    @current << lockType if approved
+    @current << lock_type if approved
     approved
   end
 
-  def unlock(lockType)
-    @current.delete(lockType)
+  def unlock(lock_type)
+    @current.delete(lock_type)
   end
 end
 
-def launch_server(port='9110')
-  idxServer = ClIndex.new(true)
+def launch_server(port = '9110')
+  idx_server = ClIndex.new(true)
   puts "ClIndex launching on localhost:#{port}..."
-  DRb.start_service("druby://localhost:#{port}", idxServer)
+  DRb.start_service("druby://localhost:#{port}", idx_server)
   DRb.thread.join
 end
 
-if __FILE__ == $0
+if $0 == __FILE__
   if if_switch('-s')
     port = get_switch('-p')
     if port

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'minitest/autorun'
 
 require_relative '../src/index'
@@ -5,8 +7,8 @@ require_relative '../src/index'
 # descendant class that intentionally slows down the locking process
 # to control testing
 class ClIndexLockDelay < ClIndex
-  def lock(lockType, wait=NO_WAIT)
-    result = super(lockType, wait)
+  def lock(lock_type, wait = NO_WAIT)
+    result = super(lock_type, wait)
     sleep 1.0
     result
   end
@@ -188,13 +190,13 @@ class TestClIndexMultiUser < Minitest::Test
     @index.save
   end
 
-  def do_test_two_client(clientAAction, clientBAction, clientBWait, clientBExpectedResult)
-    puts "testing #{clientAAction.inspect}, #{clientBAction.inspect}, wait=#{clientBWait}, expect=#{clientBExpectedResult}"
+  def do_test_two_client(client_a_action, client_b_action, client_b_wait, client_b_expected_result)
+    puts "testing #{client_a_action.inspect}, #{client_b_action.inspect}, wait=#{client_b_wait}, expect=#{client_b_expected_result}"
     ahits, bhits = [], []
     threads = []
     threads << Thread.new {
       Thread.current["name"] = 'clientA'
-      case clientAAction
+      case client_a_action
       when ClIndexLockMgr::LOAD then Thread.current["actual"] = @index.load
       when ClIndexLockMgr::SAVE then Thread.current["actual"] = @index.save
       when ClIndexLockMgr::READ then Thread.current["actual"] = @index.search('onion', ahits)
@@ -205,11 +207,11 @@ class TestClIndexMultiUser < Minitest::Test
     threads << Thread.new {
       sleep 0.5
       Thread.current["name"] = 'clientB'
-      case clientBAction
-      when ClIndexLockMgr::LOAD then Thread.current["actual"] = @index.load('index.dat', clientBWait)
-      when ClIndexLockMgr::SAVE then Thread.current["actual"] = @index.save('index.dat', clientBWait)
-      when ClIndexLockMgr::READ then Thread.current["actual"] = @index.search('onion', bhits, clientBWait)
-      when ClIndexLockMgr::EDIT then Thread.current["actual"] = @index.add('onion', 'Page 5', clientBWait)
+      case client_b_action
+      when ClIndexLockMgr::LOAD then Thread.current["actual"] = @index.load('index.dat', client_b_wait)
+      when ClIndexLockMgr::SAVE then Thread.current["actual"] = @index.save('index.dat', client_b_wait)
+      when ClIndexLockMgr::READ then Thread.current["actual"] = @index.search('onion', bhits, client_b_wait)
+      when ClIndexLockMgr::EDIT then Thread.current["actual"] = @index.add('onion', 'Page 5', client_b_wait)
       end
     }
 
@@ -218,7 +220,7 @@ class TestClIndexMultiUser < Minitest::Test
       if t["name"] == 'clientA'
         expected = true
       elsif t["name"] == 'clientB'
-        expected = clientBExpectedResult
+        expected = client_b_expected_result
       end
       assert_equal(expected, t["actual"], t["name"])
     }
@@ -226,37 +228,37 @@ class TestClIndexMultiUser < Minitest::Test
 
   def test_two_clients
     puts
-    do_test_two_client(ClIndexLockMgr::LOAD, ClIndexLockMgr::LOAD, ClIndex::WAIT   , true )
+    do_test_two_client(ClIndexLockMgr::LOAD, ClIndexLockMgr::LOAD, ClIndex::WAIT, true )
     do_test_two_client(ClIndexLockMgr::LOAD, ClIndexLockMgr::LOAD, ClIndex::NO_WAIT, false)
-    do_test_two_client(ClIndexLockMgr::LOAD, ClIndexLockMgr::SAVE, ClIndex::WAIT   , true )
+    do_test_two_client(ClIndexLockMgr::LOAD, ClIndexLockMgr::SAVE, ClIndex::WAIT, true )
     do_test_two_client(ClIndexLockMgr::LOAD, ClIndexLockMgr::SAVE, ClIndex::NO_WAIT, false)
-    do_test_two_client(ClIndexLockMgr::LOAD, ClIndexLockMgr::EDIT, ClIndex::WAIT   , true )
+    do_test_two_client(ClIndexLockMgr::LOAD, ClIndexLockMgr::EDIT, ClIndex::WAIT, true )
     do_test_two_client(ClIndexLockMgr::LOAD, ClIndexLockMgr::EDIT, ClIndex::NO_WAIT, false)
-    do_test_two_client(ClIndexLockMgr::LOAD, ClIndexLockMgr::READ, ClIndex::WAIT   , true )
+    do_test_two_client(ClIndexLockMgr::LOAD, ClIndexLockMgr::READ, ClIndex::WAIT, true )
     do_test_two_client(ClIndexLockMgr::LOAD, ClIndexLockMgr::READ, ClIndex::NO_WAIT, false)
-    do_test_two_client(ClIndexLockMgr::SAVE, ClIndexLockMgr::LOAD, ClIndex::WAIT   , true )
+    do_test_two_client(ClIndexLockMgr::SAVE, ClIndexLockMgr::LOAD, ClIndex::WAIT, true )
     do_test_two_client(ClIndexLockMgr::SAVE, ClIndexLockMgr::LOAD, ClIndex::NO_WAIT, false)
-    do_test_two_client(ClIndexLockMgr::SAVE, ClIndexLockMgr::SAVE, ClIndex::WAIT   , true )
+    do_test_two_client(ClIndexLockMgr::SAVE, ClIndexLockMgr::SAVE, ClIndex::WAIT, true )
     do_test_two_client(ClIndexLockMgr::SAVE, ClIndexLockMgr::SAVE, ClIndex::NO_WAIT, false)
-    do_test_two_client(ClIndexLockMgr::SAVE, ClIndexLockMgr::EDIT, ClIndex::WAIT   , true )
+    do_test_two_client(ClIndexLockMgr::SAVE, ClIndexLockMgr::EDIT, ClIndex::WAIT, true )
     do_test_two_client(ClIndexLockMgr::SAVE, ClIndexLockMgr::EDIT, ClIndex::NO_WAIT, false)
-    do_test_two_client(ClIndexLockMgr::SAVE, ClIndexLockMgr::READ, ClIndex::WAIT   , true )
+    do_test_two_client(ClIndexLockMgr::SAVE, ClIndexLockMgr::READ, ClIndex::WAIT, true )
     do_test_two_client(ClIndexLockMgr::SAVE, ClIndexLockMgr::READ, ClIndex::NO_WAIT, true )
-    do_test_two_client(ClIndexLockMgr::EDIT, ClIndexLockMgr::LOAD, ClIndex::WAIT   , true )
+    do_test_two_client(ClIndexLockMgr::EDIT, ClIndexLockMgr::LOAD, ClIndex::WAIT, true )
     do_test_two_client(ClIndexLockMgr::EDIT, ClIndexLockMgr::LOAD, ClIndex::NO_WAIT, false)
-    do_test_two_client(ClIndexLockMgr::EDIT, ClIndexLockMgr::SAVE, ClIndex::WAIT   , true )
+    do_test_two_client(ClIndexLockMgr::EDIT, ClIndexLockMgr::SAVE, ClIndex::WAIT, true )
     do_test_two_client(ClIndexLockMgr::EDIT, ClIndexLockMgr::SAVE, ClIndex::NO_WAIT, false)
-    do_test_two_client(ClIndexLockMgr::EDIT, ClIndexLockMgr::EDIT, ClIndex::WAIT   , true )
+    do_test_two_client(ClIndexLockMgr::EDIT, ClIndexLockMgr::EDIT, ClIndex::WAIT, true )
     do_test_two_client(ClIndexLockMgr::EDIT, ClIndexLockMgr::EDIT, ClIndex::NO_WAIT, false)
-    do_test_two_client(ClIndexLockMgr::EDIT, ClIndexLockMgr::READ, ClIndex::WAIT   , true )
+    do_test_two_client(ClIndexLockMgr::EDIT, ClIndexLockMgr::READ, ClIndex::WAIT, true )
     do_test_two_client(ClIndexLockMgr::EDIT, ClIndexLockMgr::READ, ClIndex::NO_WAIT, false)
-    do_test_two_client(ClIndexLockMgr::READ, ClIndexLockMgr::LOAD, ClIndex::WAIT   , true )
+    do_test_two_client(ClIndexLockMgr::READ, ClIndexLockMgr::LOAD, ClIndex::WAIT, true )
     do_test_two_client(ClIndexLockMgr::READ, ClIndexLockMgr::LOAD, ClIndex::NO_WAIT, false)
-    do_test_two_client(ClIndexLockMgr::READ, ClIndexLockMgr::SAVE, ClIndex::WAIT   , true )
+    do_test_two_client(ClIndexLockMgr::READ, ClIndexLockMgr::SAVE, ClIndex::WAIT, true )
     do_test_two_client(ClIndexLockMgr::READ, ClIndexLockMgr::SAVE, ClIndex::NO_WAIT, true )
-    do_test_two_client(ClIndexLockMgr::READ, ClIndexLockMgr::EDIT, ClIndex::WAIT   , true )
+    do_test_two_client(ClIndexLockMgr::READ, ClIndexLockMgr::EDIT, ClIndex::WAIT, true )
     do_test_two_client(ClIndexLockMgr::READ, ClIndexLockMgr::EDIT, ClIndex::NO_WAIT, false) # if true (1) will it crash program? (2) will it give acceptable results?
-    do_test_two_client(ClIndexLockMgr::READ, ClIndexLockMgr::READ, ClIndex::WAIT   , true )
+    do_test_two_client(ClIndexLockMgr::READ, ClIndexLockMgr::READ, ClIndex::WAIT, true )
     do_test_two_client(ClIndexLockMgr::READ, ClIndexLockMgr::READ, ClIndex::NO_WAIT, true )
   end
 end
@@ -280,20 +282,18 @@ class TestThreadSafeArray < Minitest::Test
     @a.flatten!
     @b = []
     t = Thread.new do
-       @a.each do |x|
-          @b << x
-          Thread.pass
-       end
+      @a.each do |x|
+        @b << x
+        Thread.pass
+      end
     end
     Thread.new do
-       sleep 0.1 # to help ensure this thread goes 2nd
-       @a[0,0] = [12, 24]
+      sleep 0.1 # to help ensure this thread goes 2nd
+      @a[0, 0] = [12, 24]
     end
     t.join
-    assert_equal([1,2,3], @b)
+    assert_equal([1, 2, 3], @b)
   end
 
-  def test_equality
-
-  end
+  def test_equality; end
 end

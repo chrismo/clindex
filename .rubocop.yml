@@ -1,0 +1,14 @@
+inherit_from:
+  - https://relaxed.ruby.style/rubocop.yml
+
+AllCops:
+  TargetRubyVersion: 2.4
+
+Security/MarshalLoad:
+  Enabled: false
+
+Style/MethodMissingSuper:
+  Enabled: false
+
+Style/MissingRespondToMissing:
+  Enabled: false
